@@ -1,0 +1,32 @@
+# Gradle / Android
+.gradle/
+.kotlin/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Generated test and QA captures
+artifacts/
+*.log
+*.hprof
+
+# Signing material and built packages
+*.jks
+*.keystore
+*.p12
+*.apk
+*.aab
+
+# SSH keys and host-side artifacts
+id_ed25519*
+*.pem
+*.key
+authorized_keys
+docs.json
