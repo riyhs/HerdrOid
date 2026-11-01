@@ -10,13 +10,15 @@ Read `README.md` for the product and `TODO.md` for the current backlog.
 
 - Protocol, read-only `herdr-app` mirror, SSH transport, encrypted data layer,
   inbox UI, and native terminal are implemented.
-- Transport verified on a physical Android phone against a live hc host:
-  connect, attach, typing, Back/reopen, timeout, and Cancel.
+- Transport verified on a physical Android phone against a live hc host running
+  herdr-core 0.1.16: connect, attach, typing, Back/reopen, timeout, and Cancel.
 - New since that pass: single-activity inbox UI, encrypted host store, domain /
   data modules, off-main terminal output, IME transition protection,
   scrollback controls, and the heap-buffer terminal input fix. These need a
   fresh-device recheck.
-- This is a development build; release signing and packaging are not done.
+- This is a development build. Release signing is wired for tag-based CI;
+  the first signed release still needs the keystore secrets. Play Store/F-Droid
+  packaging is not done.
 
 ## Build and test
 
@@ -114,9 +116,9 @@ Run `./scripts/check-invariants.sh` before finishing. It enforces:
 - Android backup is disabled
 
 The host config is encrypted in `MachineStore` with a Keystore AES-GCM key.
-Private key material is decrypted only into a private cache file, zeroed after
-use, and deleted. Do not add plaintext persistence. Release builds set
-`FLAG_SECURE`; debug builds intentionally allow screenshots for QA.
+Decrypted private key material lives only in memory, is zeroed after use, and is
+never written to a cache file. Do not add plaintext persistence. Release builds
+set `FLAG_SECURE`; debug builds intentionally allow screenshots for QA.
 
 Never read, copy, print, or modify real private keys, `authorized_keys`,
 `docs.json`, or secrets. The user adds the app's public key to the host
