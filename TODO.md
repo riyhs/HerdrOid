@@ -23,8 +23,9 @@ Updated: 2026-11-01
 
 ## Verification
 
-- [ ] Recheck the new inbox UI, host sheet, onboarding, and trust flow on a
-  physical Android phone.
+- [x] Recheck the inbox and Hosts sheet on a physical Android phone
+  (Galaxy A55, live host).
+- [ ] Verify the first-run Add host and host-key trust flow on a phone.
 - [ ] Verify blocked-agent notifications and foreground-service behavior under
   Doze/background restrictions.
 - [ ] Verify reconnect after phone sleep/network loss, including event `missed`
@@ -65,6 +66,10 @@ Updated: 2026-11-01
   removes the recents screenshot.
 - [ ] Biometric app lock and optional per-terminal `FLAG_SECURE` policy.
 - [ ] Local audit log for connect/trust/command actions.
-- [ ] Release signing, F-Droid/Play packaging.
+- [x] Add a tag-triggered signed release workflow and a pull-request CI
+  workflow.
+- [ ] Add the release keystore secrets and publish the first signed release.
+- [ ] F-Droid/Play packaging.
+- [ ] Choose and add a LICENSE before making the repository public.
 - [ ] Consider a QR/deep-link host import while keeping key handoff manual.
 - [ ] Review host-key reset and permission prompts with a fresh user.
