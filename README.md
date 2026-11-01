@@ -41,7 +41,7 @@ stay on the phone; the only network connection is SSH to your own machine.
 
 ## Install the APK
 
-1. Open the [latest release](https://github.com/riyhs/Herdr-Oid/releases/latest).
+1. Open the [latest release](https://github.com/riyhs/HerdrOid/releases/latest).
 2. Download `HerdrOid-<version>.apk`.
 3. Open the file. Android may ask you to allow installs from your browser or
    file manager. Allow it for this one install.
@@ -200,8 +200,8 @@ system settings. Battery optimization can also delay background alerts.
 Requirements: JDK 17 and Android SDK Platform 37.0.
 
 ```sh
-git clone https://github.com/riyhs/Herdr-Oid.git
-cd Herdr-Oid
+git clone https://github.com/riyhs/HerdrOid.git
+cd HerdrOid
 . scripts/env.sh          # Windows Git Bash; set ANDROID_HOME on Linux/macOS
 ./gradlew :app:assembleDebug
 ```
