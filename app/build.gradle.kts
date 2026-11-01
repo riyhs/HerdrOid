@@ -3,6 +3,28 @@ plugins {
   alias(libs.plugins.compose.compiler)
 }
 
+val releaseKeystore = providers.gradleProperty("herdroid.keystore").orNull
+  ?: providers.environmentVariable("HERDROID_KEYSTORE").orNull
+val releaseStorePassword = providers.gradleProperty("herdroid.keystorePassword").orNull
+  ?: providers.environmentVariable("HERDROID_KEYSTORE_PASSWORD").orNull
+val releaseKeyAlias = providers.gradleProperty("herdroid.keyAlias").orNull
+  ?: providers.environmentVariable("HERDROID_KEY_ALIAS").orNull
+val releaseKeyPassword = providers.gradleProperty("herdroid.keyPassword").orNull
+  ?: providers.environmentVariable("HERDROID_KEY_PASSWORD").orNull
+val releaseSigningValues = listOf(releaseKeystore, releaseStorePassword, releaseKeyAlias, releaseKeyPassword)
+val releaseSigningCount = releaseSigningValues.count { !it.isNullOrBlank() }
+require(releaseSigningCount == 0 || releaseSigningCount == releaseSigningValues.size) {
+  "Set all four release signing values, or none: HERDROID_KEYSTORE, " +
+    "HERDROID_KEYSTORE_PASSWORD, HERDROID_KEY_ALIAS, HERDROID_KEY_PASSWORD."
+}
+val releaseSigningReady = releaseSigningCount == releaseSigningValues.size
+
+val appVersionName = providers.gradleProperty("herdroid.versionName").orNull
+  ?: providers.environmentVariable("HERDROID_VERSION_NAME").orNull
+  ?: "0.1"
+val appVersionCode = (providers.gradleProperty("herdroid.versionCode").orNull
+  ?: providers.environmentVariable("HERDROID_VERSION_CODE").orNull)?.toIntOrNull() ?: 1
+
 android {
   namespace = "dev.riyaldi.herdroid"
   compileSdk = 37
@@ -10,13 +32,25 @@ android {
     applicationId = "dev.riyaldi.herdroid"
     minSdk = 26
     targetSdk = 37
-    versionCode = 1
-    versionName = "1.0"
+    versionCode = appVersionCode
+    versionName = appVersionName
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+  }
+
+  signingConfigs {
+    if (releaseSigningReady) {
+      create("release") {
+        storeFile = rootProject.file(releaseKeystore!!)
+        storePassword = releaseStorePassword
+        keyAlias = releaseKeyAlias
+        keyPassword = releaseKeyPassword
+      }
+    }
   }
 
   buildTypes {
     release {
+      signingConfig = signingConfigs.findByName("release")
       isMinifyEnabled = true
       isShrinkResources = true
       proguardFiles(
