@@ -47,6 +47,13 @@ Updated: 2026-11-01
 - [x] Add stable lazy-list keys and a single inbox-first navigation flow.
 - [x] Enable R8 minification and resource shrinking for release with keep rules
   for JSch, BouncyCastle, and termlib.
+- [x] Add a terminal Macrobenchmark harness with stream, idle, scroll, and IME
+  workloads.
+- [x] Run the terminal Macrobenchmark on a physical phone and record p95/p99
+  frame overrun and trace-section timings. Baseline is in
+  `benchmark/BASELINE.md`.
+- [ ] Reduce termlib's per-row full-screen canvas cost (single terminal canvas
+  or an upstream fix) and re-run the stream benchmark.
 - [ ] Add baseline profiles.
 - [ ] Profile on the real phone with `android profiler systemtrace` or
   Macrobenchmark; check frame timing during IME open and large output.

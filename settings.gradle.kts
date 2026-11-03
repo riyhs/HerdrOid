@@ -33,6 +33,7 @@ plugins {
 rootProject.name = "HerdrOid"
 
 include(":app")
+include(":benchmark")
 include(":core:domain")
 include(":core:data")
 include(":core:protocol")

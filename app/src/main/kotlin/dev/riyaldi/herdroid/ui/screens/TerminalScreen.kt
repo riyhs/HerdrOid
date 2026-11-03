@@ -1,5 +1,6 @@
 package dev.riyaldi.herdroid.ui.screens
 
+import android.os.Trace
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -138,14 +139,29 @@ fun TerminalScreen(
           when (event) {
             is TerminalEvent.Data -> {
               val bytes = event.bytes
-              val wheelEnabled = mouseTracker.feed(bytes)
+              Trace.beginSection("HerdrOid.terminal.mouseFeed")
+              val wheelEnabled = try {
+                mouseTracker.feed(bytes)
+              } finally {
+                Trace.endSection()
+              }
               if (wheelEnabled != mouseWheelEnabled) {
                 withContext(Dispatchers.Main.immediate) {
                   mouseWheelEnabled = wheelEnabled
                 }
               }
-              emulator.writeInput(bytes)
-              attach.acknowledge(bytes.size)
+              Trace.beginSection("HerdrOid.terminal.writeInput")
+              try {
+                emulator.writeInput(bytes)
+              } finally {
+                Trace.endSection()
+              }
+              Trace.beginSection("HerdrOid.terminal.ack")
+              try {
+                attach.acknowledge(bytes.size)
+              } finally {
+                Trace.endSection()
+              }
             }
             is TerminalEvent.Closed -> {
               withContext(Dispatchers.Main.immediate) {
