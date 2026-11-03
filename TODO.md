@@ -52,8 +52,12 @@ Updated: 2026-11-01
 - [x] Run the terminal Macrobenchmark on a physical phone and record p95/p99
   frame overrun and trace-section timings. Baseline is in
   `benchmark/BASELINE.md`.
-- [ ] Reduce termlib's per-row full-screen canvas cost (single terminal canvas
-  or an upstream fix) and re-run the stream benchmark.
+- [x] Test single/two/full-screen canvas termlib forks and record the result.
+  All variants regressed or matched the control; see
+  `benchmark/TERMLIB-FORK.md`.
+- [ ] Investigate draw-call cost in termlib (run-based text or a glyph atlas)
+  before expecting 120 fps; the 16 ms cadence and per-row canvases are not the
+  main blocker.
 - [ ] Add baseline profiles.
 - [ ] Profile on the real phone with `android profiler systemtrace` or
   Macrobenchmark; check frame timing during IME open and large output.

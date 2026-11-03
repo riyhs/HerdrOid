@@ -39,3 +39,12 @@ include(":core:data")
 include(":core:protocol")
 include(":core:mirror")
 include(":core:ssh")
+
+val termlibFork = providers.gradleProperty("termlibFork").orNull
+if (termlibFork != null) {
+  includeBuild(termlibFork) {
+    dependencySubstitution {
+      substitute(module("org.connectbot:termlib")).using(project(":lib"))
+    }
+  }
+}

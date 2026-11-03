@@ -96,16 +96,16 @@ batching path was removed because it did not improve frame timing.
 
 ## Next step
 
-The first change to test is replacing the per-row full-screen canvases with a
-single terminal canvas (or taking an upstream termlib fix that does the same).
-That is a renderer-level change, not an SSH/credit-window change. App-side
-URL and output-batching experiments did not produce a significant gain, so the
-next work belongs in a local termlib fork.
+The single/two/full-screen canvas experiment was run in a local termlib fork.
+It did not help: at a matched 35 °C start the hybrid was 31.8 / 37.6 ms p50/p95
+versus 30.4 / 36.2 ms for the control, and the traces showed no reduction in
+measure-time recompositions. See [TERMLIB-FORK.md](./TERMLIB-FORK.md).
 
-After that, make URL detection lazy per line if the local trace still shows it
-mattering, then re-run `stream` on this phone with the same five-iteration
-setup. Keep `writeInput` tracing in place to confirm the parser is still off the
-main thread and not regressing.
+The renderer's remaining cost is in the per-cell draw operations, not the number
+of canvas nodes. The 8.33 ms snapshot cadence was not attempted because frame
+CPU is still 28–32 ms p50, well above the 8.33 ms budget. Future work should
+reduce drawing cost itself (run-based text, a glyph atlas, or a different
+backend), not repartition the canvases or increase the snapshot rate.
 
 ## Caveats
 
