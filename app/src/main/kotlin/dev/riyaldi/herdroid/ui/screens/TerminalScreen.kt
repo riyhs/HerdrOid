@@ -67,6 +67,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.withContext
 import org.connectbot.terminal.Terminal
 import org.connectbot.terminal.TerminalEmulatorFactory
+import java.util.concurrent.atomic.AtomicBoolean
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -74,6 +75,7 @@ fun TerminalScreen(
   terminal: OpenTerminal,
   machineName: String,
   onBack: () -> Unit,
+  autoDetectUrls: Boolean = true,
 ) {
   val clipboard = LocalClipboardManager.current
   val uriHandler = LocalUriHandler.current
@@ -93,7 +95,7 @@ fun TerminalScreen(
   var showHint by rememberSaveable { mutableStateOf(true) }
   val demoInput = remember { MutableSharedFlow<ByteArray>(extraBufferCapacity = 64) }
 
-  val emulator = remember {
+  val emulator = remember(terminal, autoDetectUrls) {
     TerminalEmulatorFactory.create(
       initialRows = 30,
       initialCols = 100,
@@ -103,12 +105,33 @@ fun TerminalScreen(
         if (terminal.demo) demoInput.tryEmit(bytes) else currentAttach?.write(bytes)
       },
       onResize = { dimensions -> currentAttach?.resize(dimensions.columns, dimensions.rows) },
-      autoDetectUrls = true,
+      autoDetectUrls = autoDetectUrls,
     )
   }
 
+  val terminalLock = remember(emulator) { Any() }
+  val terminalClosed = remember(emulator) { AtomicBoolean(false) }
+
+  fun writeEmulator(bytes: ByteArray): Boolean = synchronized(terminalLock) {
+    if (terminalClosed.get()) {
+      false
+    } else {
+      emulator.writeInput(bytes)
+      true
+    }
+  }
+
+  fun pasteEmulator(text: String) = synchronized(terminalLock) {
+    if (!terminalClosed.get()) emulator.pasteText(text)
+  }
+
   DisposableEffect(emulator) {
-    onDispose { emulator.close() }
+    onDispose {
+      synchronized(terminalLock) {
+        terminalClosed.set(true)
+        emulator.close()
+      }
+    }
   }
 
   LaunchedEffect(showHint) {
@@ -120,13 +143,13 @@ fun TerminalScreen(
 
   LaunchedEffect(terminal.demo, emulator) {
     if (terminal.demo) {
-      demoInput.collect { bytes -> emulator.writeInput(bytes) }
+      demoInput.collect { bytes -> writeEmulator(bytes) }
     }
   }
 
   LaunchedEffect(terminal.address, attach) {
     if (terminal.demo) {
-      emulator.writeInput(DEMO_SCREEN.toByteArray())
+      writeEmulator(DEMO_SCREEN.toByteArray())
       return@LaunchedEffect
     }
     if (attach == null) {
@@ -151,16 +174,18 @@ fun TerminalScreen(
                 }
               }
               Trace.beginSection("HerdrOid.terminal.writeInput")
-              try {
-                emulator.writeInput(bytes)
+              val written = try {
+                writeEmulator(bytes)
               } finally {
                 Trace.endSection()
               }
-              Trace.beginSection("HerdrOid.terminal.ack")
-              try {
-                attach.acknowledge(bytes.size)
-              } finally {
-                Trace.endSection()
+              if (written) {
+                Trace.beginSection("HerdrOid.terminal.ack")
+                try {
+                  attach.acknowledge(bytes.size)
+                } finally {
+                  Trace.endSection()
+                }
               }
             }
             is TerminalEvent.Closed -> {
@@ -279,7 +304,7 @@ fun TerminalScreen(
                 }
               },
               onPasteRequest = {
-                clipboard.getText()?.text?.let { emulator.pasteText(it) }
+                clipboard.getText()?.text?.let { pasteEmulator(it) }
               },
               resizeSuspended = imeAnimating,
             )
@@ -311,11 +336,11 @@ fun TerminalScreen(
           demo = terminal.demo,
           onToggleKeyboard = { keyboardVisible = !keyboardVisible },
           onSend = { text ->
-            if (terminal.demo) emulator.writeInput(text.toByteArray()) else attach?.write(text.toByteArray())
+            if (terminal.demo) writeEmulator(text.toByteArray()) else attach?.write(text.toByteArray())
           },
           onPaste = {
             clipboard.getText()?.text?.let { text ->
-              if (terminal.demo) emulator.writeInput(text.toByteArray()) else emulator.pasteText(text)
+              if (terminal.demo) writeEmulator(text.toByteArray()) else pasteEmulator(text)
             }
           },
         )

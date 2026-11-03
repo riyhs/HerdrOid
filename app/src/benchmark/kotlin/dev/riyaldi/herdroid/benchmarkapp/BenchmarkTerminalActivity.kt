@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 class BenchmarkTerminalActivity : ComponentActivity() {
   private lateinit var handle: BenchmarkTerminalHandle
@@ -42,8 +43,12 @@ class BenchmarkTerminalActivity : ComponentActivity() {
     }
     window.decorView.filterTouchesWhenObscured = true
     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    val workload = intent.getStringExtra(EXTRA_WORKLOAD) ?: WORKLOAD_STREAM
+    val autoDetectUrls = intent.getBooleanExtra(EXTRA_AUTO_DETECT_URLS, true)
+    val chunkMs = intent.getLongExtra(EXTRA_CHUNK_MS, 16L).coerceAtLeast(1L)
+    configureRefreshRate(intent.getFloatExtra(EXTRA_REFRESH_HZ, 60f))
     enableEdgeToEdge()
-    handle = BenchmarkTerminalHandle(intent.getStringExtra(EXTRA_WORKLOAD) ?: WORKLOAD_STREAM)
+    handle = BenchmarkTerminalHandle(workload, chunkMs)
     setContent {
       HerdrOidTheme {
         Surface(
@@ -59,6 +64,7 @@ class BenchmarkTerminalActivity : ComponentActivity() {
             ),
             machineName = "Benchmark host",
             onBack = { finish() },
+            autoDetectUrls = autoDetectUrls,
           )
         }
       }
@@ -70,14 +76,33 @@ class BenchmarkTerminalActivity : ComponentActivity() {
     super.onDestroy()
   }
 
+  @Suppress("DEPRECATION")
+  private fun configureRefreshRate(refreshHz: Float) {
+    val display = windowManager.defaultDisplay
+    val currentMode = display.mode
+    val mode = display.supportedModes.firstOrNull {
+      abs(it.refreshRate - refreshHz) < 0.1f &&
+        it.physicalWidth == currentMode.physicalWidth &&
+        it.physicalHeight == currentMode.physicalHeight
+    }
+    window.attributes = window.attributes.apply {
+      preferredRefreshRate = refreshHz
+      if (mode != null) preferredDisplayModeId = mode.modeId
+    }
+  }
+
   private companion object {
     const val EXTRA_WORKLOAD = "workload"
+    const val EXTRA_AUTO_DETECT_URLS = "autoDetectUrls"
+    const val EXTRA_CHUNK_MS = "chunkMs"
+    const val EXTRA_REFRESH_HZ = "refreshHz"
     const val WORKLOAD_STREAM = "stream"
   }
 }
 
 private class BenchmarkTerminalHandle(
   private val workload: String,
+  private val chunkMs: Long,
 ) : TerminalHandle {
   private val eventsChannel = Channel<TerminalEvent>(capacity = 64)
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -117,7 +142,7 @@ private class BenchmarkTerminalHandle(
         while (scope.isActive) {
           eventsChannel.send(TerminalEvent.Data(chunks[index % chunks.size]))
           index++
-          delay(16)
+          delay(chunkMs)
         }
       }
     }

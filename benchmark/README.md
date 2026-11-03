@@ -24,8 +24,13 @@ adb -s <serial> install -r benchmark/build/outputs/apk/benchmark/benchmark-bench
 adb -s <serial> shell am instrument -w -r \
   -e class dev.riyaldi.herdroid.benchmark.TerminalBenchmark#stream \
   -e iterations 5 -e warmupMs 4000 -e measureMs 10000 \
+  -e refreshHz 60 -e autoDetectUrls true -e chunkMs 16 \
   dev.riyaldi.herdroid.benchmark/androidx.test.runner.AndroidJUnitRunner
 ```
+
+`refreshHz` pins the benchmark window to a matching display mode; 60 Hz is the
+baseline because termlib's snapshot cadence targets 60 Hz. `autoDetectUrls` and
+`chunkMs` allow app-side and source-cadence A/B runs without rebuilding the app.
 
 Run each workload separately; don't run a build or another benchmark at the same
 time. Use a release-like, non-debuggable APK (the `benchmark` variant is
@@ -42,8 +47,8 @@ the CPU-frame and trace numbers to compare changes. This harness does not
 measure input-to-present latency; add a real-host input workload before using
 that metric.
 
-See [BASELINE.md](./BASELINE.md) for the first physical-device measurement and
-the main-thread trace breakdown.
+See [BASELINE.md](./BASELINE.md) for the physical-device measurement, the
+app-side A/B results, and the main-thread trace breakdown.
 
 ## Emulator smoke test
 

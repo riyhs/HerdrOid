@@ -65,15 +65,47 @@ The remaining cost is Compose measure/layout and draw of the terminal rows,
 plus URL-mask maintenance. `TerminalScreen` passes `autoDetectUrls = true`, and
 termlib rebuilds a `rows × cols` hyperlink mask for every snapshot.
 
+## App-side experiments (2026-11-03)
+
+Same A55, now pinned to 60 Hz, five iterations, 4 s warmup, 10 s measure.
+All four runs use the same benchmark APK and the same synthetic stream. The
+emulator teardown was made write-safe first; the original batching run
+uncovered a `Terminal has been closed` crash during activity teardown.
+
+| variant | frames | CPU p50/p95/p99 ms | overrun p95 ms | write calls | writeInput total |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| baseline | 406 | 30.2 / 35.3 / 40.2 | 45.6 | 627 | 781 ms |
+| URLs off | 389 | 30.5 / 37.4 / 42.7 | 48.8 | 625 | 934 ms |
+| 20 ms batching | 395 | 33.1 / 40.1 / 44.1 | 54.5 | 313 | 846 ms |
+| URLs off + batching | 432 | 29.7 / 37.6 / 41.7 | 47.2 | 313 | 865 ms |
+
+No app-side variant is a meaningful win:
+
+- Disabling plain-text URL detection is within run-to-run noise and moved p95
+  in the wrong direction.
+- Batching halved `writeInput` calls but made p95 worse. Each batched call took
+  about twice as long, and the total parser time did not fall.
+- The combined variant improved p50 slightly but regressed p95; it also reduced
+  the number of distinct terminal draws.
+- At 60 Hz the best p50 is still about 30 ms against a 16.7 ms deadline. The
+  per-row renderer, not URL detection or output chunking, remains the dominant
+  cost.
+
+The write/close guard is kept because it fixes a real teardown race. The
+batching path was removed because it did not improve frame timing.
+
 ## Next step
 
 The first change to test is replacing the per-row full-screen canvases with a
 single terminal canvas (or taking an upstream termlib fix that does the same).
-That is a renderer-level change, not an SSH/credit-window change.
+That is a renderer-level change, not an SSH/credit-window change. App-side
+URL and output-batching experiments did not produce a significant gain, so the
+next work belongs in a local termlib fork.
 
-After that, make URL detection lazy per line, then re-run `stream` on this phone
-with the same five-iteration setup. Keep `writeInput` tracing in place to confirm
-the parser is still off the main thread and not regressing.
+After that, make URL detection lazy per line if the local trace still shows it
+mattering, then re-run `stream` on this phone with the same five-iteration
+setup. Keep `writeInput` tracing in place to confirm the parser is still off the
+main thread and not regressing.
 
 ## Caveats
 

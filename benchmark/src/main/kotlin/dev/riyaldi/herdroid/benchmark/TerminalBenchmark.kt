@@ -26,6 +26,12 @@ class TerminalBenchmark {
     InstrumentationRegistry.getArguments().getString(ARG_WARMUP_MS)?.toLongOrNull() ?: DEFAULT_WARMUP_MS
   private val measureMs =
     InstrumentationRegistry.getArguments().getString(ARG_MEASURE_MS)?.toLongOrNull() ?: DEFAULT_MEASURE_MS
+  private val autoDetectUrls =
+    InstrumentationRegistry.getArguments().getString(ARG_AUTO_DETECT_URLS)?.toBooleanStrictOrNull() ?: true
+  private val refreshHz =
+    InstrumentationRegistry.getArguments().getString(ARG_REFRESH_HZ)?.toFloatOrNull() ?: DEFAULT_REFRESH_HZ
+  private val chunkMs =
+    InstrumentationRegistry.getArguments().getString(ARG_CHUNK_MS)?.toLongOrNull() ?: DEFAULT_CHUNK_MS
 
   @Test
   fun stream() = runTerminalBenchmark(workload = "stream") {
@@ -75,6 +81,9 @@ class TerminalBenchmark {
         Intent().apply {
           component = ComponentName(TARGET_PACKAGE, BENCHMARK_ACTIVITY)
           putExtra(EXTRA_WORKLOAD, workload)
+          putExtra(EXTRA_AUTO_DETECT_URLS, autoDetectUrls)
+          putExtra(EXTRA_REFRESH_HZ, refreshHz)
+          putExtra(EXTRA_CHUNK_MS, chunkMs)
         },
       )
       Thread.sleep(warmupMs)
@@ -86,11 +95,19 @@ class TerminalBenchmark {
     const val TARGET_PACKAGE = "dev.riyaldi.herdroid"
     const val BENCHMARK_ACTIVITY = "dev.riyaldi.herdroid.benchmarkapp.BenchmarkTerminalActivity"
     const val EXTRA_WORKLOAD = "workload"
+    const val EXTRA_AUTO_DETECT_URLS = "autoDetectUrls"
+    const val EXTRA_REFRESH_HZ = "refreshHz"
+    const val EXTRA_CHUNK_MS = "chunkMs"
     const val ARG_ITERATIONS = "iterations"
     const val ARG_WARMUP_MS = "warmupMs"
     const val ARG_MEASURE_MS = "measureMs"
+    const val ARG_AUTO_DETECT_URLS = "autoDetectUrls"
+    const val ARG_REFRESH_HZ = "refreshHz"
+    const val ARG_CHUNK_MS = "chunkMs"
     const val DEFAULT_ITERATIONS = 5
     const val DEFAULT_WARMUP_MS = 4_000L
     const val DEFAULT_MEASURE_MS = 10_000L
+    const val DEFAULT_REFRESH_HZ = 60f
+    const val DEFAULT_CHUNK_MS = 16L
   }
 }
