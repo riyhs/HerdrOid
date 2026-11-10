@@ -1,5 +1,10 @@
 # HerdrOid
 
+> **This is a personal side project, not the official app.** The official
+> Herdr Mobile is already released at [herdr.dev/mobile](https://herdr.dev/mobile/).
+> HerdrOid is my own unofficial Android client, built for my own use and shared
+> as-is. It is not affiliated with or supported by the Herdr project.
+
 > **Heads up: no human has reviewed this code.** HerdrOid was written by AI
 > models (LLMs). I use it on my own phone and test every change by hand before
 > it ships, but I have not read the code and there are no plans for a human

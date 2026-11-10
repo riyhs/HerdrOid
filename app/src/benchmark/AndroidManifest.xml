@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <profileable android:shell="true" tools:targetApi="29" />
+
+        <activity
+            android:name=".benchmarkapp.BenchmarkTerminalActivity"
+            android:exported="true"
+            android:theme="@style/Theme.HerdrOid" />
+    </application>
+
+</manifest>
